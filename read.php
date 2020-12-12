@@ -8,20 +8,19 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     exit;
 }
 // Check existence of id parameter before processing further
-if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
+if(isset($_GET["id"])){
     // Include config file
-    require_once "config.php";
+    include 'config.php';
     
     // Prepare a select statement
-    $sql = "SELECT * FROM employees WHERE id = ?";
-    
+    $sql = "SELECT * FROM employees
+                        WHERE id=?";    
     if($stmt = mysqli_prepare($link, $sql)){
         // Bind variables to the prepared statement as parameters
         mysqli_stmt_bind_param($stmt, "i", $param_id);
         
         // Set parameters
         $param_id = trim($_GET["id"]);
-        
         // Attempt to execute the prepared statement
         if(mysqli_stmt_execute($stmt)){
             $result = mysqli_stmt_get_result($stmt);
@@ -31,12 +30,8 @@ if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
                 contains only one row, we don't need to use while loop */
                 $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
                 
-                // Retrieve individual field value
-                $name = $row["name"];
-                $address = $row["address"];
-                $salary = $row["salary"];
-                $hobbies = $row["hobbies"];
-                $phoneno = $row["phoneno"];
+
+   
             } else{
                 // URL doesn't contain valid id parameter. Redirect to error page
                 header("location: error.php");
@@ -65,11 +60,16 @@ if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
     <meta charset="UTF-8">
     <title>View Record</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
         .wrapper{
             width: 500px;
             margin: 0 auto;
         }
+        img{
+            width: 50%;
+            height: 50%;  
+            margin-bottom: 3rem;      }
     </style>
 </head>
 <body>
@@ -80,6 +80,9 @@ if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
                     <div class="page-header">
                         <h1>View Record</h1>
                     </div>
+
+                        <img src="img/<?php echo $row["uploadfile"]; ?>" alt="">
+
                     <div class="form-group">
                         <label>Name</label>
                         <p class="form-control-static"><?php echo $row["name"]; ?></p>
@@ -100,6 +103,20 @@ if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
                         <label>Phone Number</label>
                         <p class="form-control-static"><?php echo $row["phoneno"]; ?></p>
                     </div>
+                        <?php 
+                                $link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+                                $sqlll = "SELECT * FROM `multiple` WHERE insertid = $param_id";
+                                $resultt = $link->query($sqlll);
+
+                                if($resultt->num_rows > 0){
+                                    while($roww = $resultt->fetch_assoc()){
+                                        $imageURL = $roww["imgName"];
+
+                              echo "<td><img src='img/". $imageURL ."'></td>";  
+
+               }
+                }
+                 ?>                    
                     <p><a href="welcome.php" class="btn btn-primary">Back</a></p>
                 </div>
             </div>        

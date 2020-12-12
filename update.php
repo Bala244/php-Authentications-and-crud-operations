@@ -9,7 +9,10 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
 }   
 // Include config file
 require_once "config.php";
- 
+      $useremail = $_SESSION["email"];
+    $sqll = mysqli_query($link, "SELECT * FROM auth WHERE email='$useremail'");
+    $roww = mysqli_fetch_array($sqll);
+    $idd = $roww["id"];
 // Define variables and initialize with empty values
 $name = $address = $salary = $hobbies = $phoneno = "";
 $name_err = $address_err = $salary_err = $hobbies_err = $phoneno_err = "";
@@ -55,7 +58,15 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
         $hobbies = $input_hobbies;
     }
 
-
+        $msg = ""; 
+  
+    // If upload button is clicked ... 
+  // if (isset($_POST['upload'])) { 
+  
+  //   $filename = $_FILES["uploadfile"]["name"]; 
+  //   $tempname = $_FILES["uploadfile"]["tmp_name"];     
+  //       $folder = "img/".$filename; 
+  //   }        
 
     // Validate phoneno
     $input_phoneno = trim($_POST["phoneno"]);
@@ -66,15 +77,16 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
     } else{
         $phoneno = $input_phoneno;
     }
+
     // Check input errors before inserting in database
     if(empty($name_err) && empty($address_err) && empty($salary_err) && empty($hobbies_err) && empty($phoneno_err)){
         // Prepare an insert statement
 
-        $sql = "UPDATE employees SET name=?, address=?, salary=?, hobbies=?, phoneno=? WHERE id=?";
+        $sql = "UPDATE employees SET name=?, address=?, hobbies=?, salary=?, phoneno=? WHERE id=?";
 
         if($stmt = mysqli_prepare($link, $sql)){
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "sssssi", $param_name, $param_address, $param_salary, $param_hobbies, $param_phoneno, $param_id);
+            mysqli_stmt_bind_param($stmt, "sssssi", $param_name, $param_address, $param_hobbies, $param_salary, $param_phoneno, $param_id);
             
             // Set parameters
             $param_name = $name;
@@ -82,12 +94,60 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
             $param_salary = $salary;
             $param_hobbies = $hobbies;
             $param_phoneno = $phoneno;
+ 
             $param_id = $id;
-            
+
+
+            //delete prev data in multiple
+                    // $sqllll = "DELETE FROM `multiple` WHERE insertid = $param_id";
+
+                        // if ($link->multi_query($sqllll) === TRUE) {
+                        //     echo "New records created successfully";
+                                                      
+                        // } else {
+                        //     echo "Error: " . $sqllll . "<br>" . $link->error;
+                        // }
             // Attempt to execute the prepared statement
-            if(mysqli_stmt_execute($stmt)){
-                // Records updated successfully. Redirect to landing page
-                header("location: welcome.php");
+            if(mysqli_stmt_execute($stmt)){    
+              //   if (move_uploaded_file($tempname, $folder))  { 
+              //       $msg = "Image uploaded successfully"; 
+
+              //   }else{ 
+              //       $msg = "Failed to upload image"; 
+              // }
+                // if (isset($_POST['upload'])) {  
+                //     $uploadfolder = 'img/';
+                //     foreach ($_FILES['imageFile']['tmp_name'] as $key => $image) {
+                //         $imageTmpName = $_FILES['imageFile']['tmp_name'][$key];
+                //         $imageName = $_FILES['imageFile']['name'][$key];
+                //         $result = move_uploaded_file($imageTmpName,$uploadfolder.$imageName);
+
+
+                //          // save to database
+                //          $query = "INSERT INTO multiple (userid,insertid,imgName) VALUES ('$idd','$param_id', '$imageName');";
+                //          $run = $link->query($query) or die("Error in saving image".$link->error);
+                //      }
+                //      if ($result) {
+                //      }
+                //  }
+                    // $sqlll2 = "UPDATE employees SET uploadfile='$filename' WHERE id=$param_id;";
+
+                    //     if ($link->multi_query($sqlll2) === TRUE) {
+                    //       echo "New records created successfully";
+                          
+                    //     } else {
+                    //       echo "Error: " . $sqlll2 . "<br>" . $link->error;
+                    //     }      
+  
+                        $sqlll = "UPDATE hobbies SET hobbies = (SELECT hobbies FROM employees WHERE hobbies.insertid = employees.id);";
+
+                        if ($link->multi_query($sqlll) === TRUE) {
+                          echo "New records created successfully";
+                          
+                        } else {
+                          echo "Error: " . $sqlll . "<br>" . $link->error;
+                        }
+                        header("location: welcome.php");
                 exit();
             } else{
                 echo "Something went wrong. Please try again later.";
@@ -125,6 +185,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                     $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
                     
                     // Retrieve individual field value
+
                     $name = $row["name"];
                     $address = $row["address"];
                     $salary = $row["salary"];
@@ -133,6 +194,8 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                     $hobbies = explode(",", $a);
 
                     $phoneno = $row["phoneno"];
+                    $image = $row["uploadfile"];
+
                 } else{
                     // URL doesn't contain valid id. Redirect to error page
                     header("location: error.php");
@@ -163,10 +226,23 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
     <meta charset="UTF-8">
     <title>Update Record</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
         .wrapper{
-            width: 500px;
+            width: 1200px;
             margin: 0 auto;
+        }
+        img{
+            width: 30%;
+            height: 50%;  
+            margin-bottom: 3rem;      }
+        .glyphicon-trash{
+            color: red;
+            top: -115px;
+            left: -38px;
+            background-color: #fff;
+            position: relative;
+            padding: 12px;
         }
     </style>
 </head>
@@ -178,8 +254,12 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                     <div class="page-header">
                         <h2>Update Record</h2>
                     </div>
+
                     <p>Please edit the input values and submit to update the record.</p>
-                    <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
+                    <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post" enctype="multipart/form-data">
+<!--                         <img src="img/<?php echo $row["uploadfile"]; ?>" alt="">
+                        <input class="form-group" type="file" name="uploadfile" value="<?php echo $image; ?>"/> -->
+
                         <div class="form-group <?php echo (!empty($name_err)) ? 'has-error' : ''; ?>">
                             <label>Name</label>
                             <input type="text" name="name" class="form-control" value="<?php echo $name; ?>">
@@ -244,8 +324,27 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                             <input type="text" name="phoneno" class="form-control" value="<?php echo $phoneno; ?>">
                             <span class="help-block"><?php echo $phoneno_err;?></span>
                         </div>
+<!--                         <?php 
+                                $link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+                                $sqlll = "SELECT * FROM `multiple` WHERE insertid = $param_id";
+                                $resultt = $link->query($sqlll);
+
+                                if($resultt->num_rows > 0){
+                                    while($roww = $resultt->fetch_assoc()){
+                                        $imageURL = $roww["imgName"];
+
+                              echo "<td><img src='img/". $imageURL ."'><a href='deleteimg.php?id=". $roww['id'] ."' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a></td>";  
+
+               }
+                }
+                 ?>
+                        <div class="form-group <?php echo (!empty($img_err)) ? 'has-error' : ''; ?>">
+                            <label>Images</label>
+                            <input class="form-group" type="file" name="imageFile[]" value="" multiple />
+                            <span class="help-block"></span>
+                        </div> -->
                         <input type="hidden" name="id" value="<?php echo $id; ?>"/>
-                        <input type="submit" class="btn btn-primary" value="Submit">
+                        <input type="submit" class="btn btn-primary" value="Submit" name="upload">
                         <a href="welcome.php" class="btn btn-default">Cancel</a>
                     </form>
                 </div>

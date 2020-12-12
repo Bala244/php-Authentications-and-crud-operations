@@ -25,6 +25,22 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
         // Attempt to execute the prepared statement
         if(mysqli_stmt_execute($stmt)){
             // Records deleted successfully. Redirect to landing page
+            $sqlll = "DELETE FROM `hobbies` WHERE insertid = $param_id";
+
+            if ($link->multi_query($sqlll) === TRUE) {
+                echo "New records created successfully";
+                          
+            } else {
+                echo "Error: " . $sqlll . "<br>" . $link->error;
+            }
+               $sqllll = "DELETE FROM `multiple` WHERE insertid = $param_id";
+
+            if ($link->multi_query($sqllll) === TRUE) {
+                echo "New records created successfully";
+                          
+            } else {
+                echo "Error: " . $sqllll . "<br>" . $link->error;
+            }
             header("location: welcome.php");
             exit();
         } else{
@@ -52,6 +68,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
     <meta charset="UTF-8">
     <title>View Record</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
         .wrapper{
             width: 500px;
@@ -70,6 +87,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                         <div class="alert alert-danger fade in">
                             <input type="hidden" name="id" value="<?php echo trim($_GET["id"]); ?>"/>
+                            <input type="hidden" name="lastid" value="<?php echo trim($_GET["lastid"]); ?>"/>
                             <p>Are you sure you want to delete this record?</p><br>
                             <p>
                                 <input type="submit" value="Yes" class="btn btn-danger">
@@ -84,3 +102,8 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
 
 </body>
 </html>
+
+
+                    
+
+                 
